@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+
+<script type="text/javascript">
+// 1.函数 commafy，它接受一个数字作为参数，返回一个字符串，可以把整数部分从右到左每三位数添加一个逗号，如：12000000.11 转化为 12,000,000.11。
+
+// 我的答案：
+// 
+const commafy = (num) => {
+	let integer = Math.floor(num);
+	let decimal = num.toString().indexOf('.') === -1?'':num.toString()
+.slice(num.toString().indexOf('.'));  //是string
+
+	let numbers = [];
+	while( Math.floor(integer / 1000) !== 0){
+		numbers.push(integer % 1000 > 99?integer % 1000 + '':integer%1000>9?'0' + integer % 1000:'00' + integer % 1000);
+		integer = Math.floor(integer / 1000);
+	}
+	numbers.push(integer + '');
+
+	numbers[0] += decimal;
+	return numbers.reverse().reduce((acc,val) => acc + val + ',', '').replace(/,$/g,'');
+}
+
+
+// 改进法：
+const commafy = (num) => {
+	let arr = num.toString().split('.');
+	let integer = arr[0].split('').reverse().reduce((acc,val,index) => index%3 !== 0 || index === 0?acc+val:acc+','+val,'');
+	return (arr[1])?integer.split('').reverse().join('') + '.' + arr[1]:integer.split('').reverse().join('');
+}
+
+// 因为reduce本来可以带有index此属性~！
+// 
+
+// 正则法：
+function commafy (num) {
+  let arr=num.toString().split('.')
+  var integer=arr[0].replace(/(?!\b)(?=(\d{3})+$)/g,',')
+  if(arr[1]){
+    return integer+'.'+arr[1]
+  }else return integer
+}
+
+
+// 2.完成 extname 函数，它会接受一个文件名作为参数，你需要返回它的扩展名。
+
+// 例如，输入 emoji.png，返回 .png
+// 
+const extname = (filename) => {
+  let arr = filename.split('.');
+  return arr.length === 1 || arr[0] === ''?'':'.' + arr[arr.length-1];
+}
+
+
+// 3.完成正则表达式 TRIM_REGX，可以用它来删除一个字符串前后多余的空白字符。
+// 注意：你只需要完成正则表达式的编写
+const TRIM_REGX = /^\s+|\s+$/g
+
+// 4.完成函数 hexToRGB，它的作用将 16 进制颜色值转换成 RGB 值：
+
+// hexToRGB('#F0F0F0') // => rgb(240, 240, 240)
+// hexToRGB('#9fc') // => rgb(153, 255, 204)
+// hexToRGB('无效颜色') // => null
+
+//注意很多情况，比如hex如果为空？
+//比如#4444？
+//比如#script？
+const hexToRGB = (hex) => {
+  if (hex){
+  	let arr = hex.split('#');
+  	let threetwobitarr = [];
+  	if (arr.length === 1 || arr[1].length > 6 || arr[1].search(/[^0-9a-fA-F]/) !== -1) {
+  		return null;
+  	} else {
+  		let colorhex = arr[1].split('');
+  		if (colorhex.length === 6) {
+  			let twobitarr = colorhex.reduce((acc,val,index,colorhex) => acc.concat(index%2 ===1?
+  				(colorhex[index-1] + val):''),[]);
+  			threetwobitarr = twobitarr.filter( v => v!== '');
+  		} else if (colorhex.length === 3) {
+  			threetwobitarr = colorhex.map( v => v + v );
+  		} else {
+  			return null;
+  		}
+  		let tenarr = threetwobitarr.map( v=> parseInt(v,16));
+  		return tenarr.reduce((a,v,i) => a.concat(i!==2?v + ', ':v + ')'),'rgb(');
+  	}
+  } else return null;
+}
+
+//5.完成 getChildAttributes 函数，它接受一个 DOM 元素作为参数和一个属性名作为参数，你需要返回这个 DOM 的 直接 子元素的特定属性列表。例如：
+
+// <ul id='list'>
+//   <li data-name="Jerry" class="item"><span>1</span></li>
+//   <li data-name="Lucy" class="item"><span>2</span></li>
+//   <li data-name="Tomy"><span>3</span></li>
+// </ul>
+// getChildAttributes(el, 'data-name') // => ['Jerry', 'Lucy', 'Tomy']
+// getChildAttributes(el, 'class') // => ['item', 'item', null]
+// 只需要完成 getChildAttributes 的编写。
+
+const getChildAttributes = (el, attrStr) =>{
+		let children = el.children;
+		let res = [];
+		for(let i = 0; i < children.length; i++){
+			res.push(children[i].getAttribute(attrStr));
+		}
+		return res;
+}
+
+//6.现在有很多只猫，都很肥：
+
+// const cats = [
+//   { name: 'Tom', weight: 300 },
+//   { name: 'Lucy', weight: 400 },
+//   { name: 'Lily', weight: 700 },
+//   { name: 'Jerry', weight: 600 },
+//   ...
+// ]
+// 现在你需要把它们按照由胖到瘦的顺序把它们渲染到 id 为 cats-list 的 div 元素当中：
+
+// <div id="cat-list">
+//   <div class='cat'>
+//     <span class='cat-name'>Lily</span>
+//     <span class='cat-weight'>700</span>
+//   </div>
+//   <div class='cat'>
+//     <span class='cat-name'>Jerry</span>
+//     <span class='cat-weight'>600</span>
+//   </div>
+//   <div class='cat'>
+//     <span class='cat-name'>Lucy</span>
+//     <span class='cat-weight'>400</span>
+//   </div>
+//   <div class='cat'>
+//     <span class='cat-name'>Tom</span>
+//     <span class='cat-weight'>300</span>
+//   </div>
+//   ...
+// </div>
+// 完成 renderFatCats 函数，接受一个 cats 数组作为参数，然后它会往 div#cats-list 元素内渲染类似以上的结果。注意类名需要保持一致；另外renderFatCats 可能会被多次调用，注意清空上一次渲染的数据。
+
+// 你可以使用 jQuery、React.js 等方式来完成。
+
+// （你不需要调用 renderFatCats）。
+// 
+function renderFatCats (cats) {
+  cats.sort( (m,n) => n.weight-m.weight);
+  let parent = document.getElementById("cats-list");
+  //init()，清空原来的列表
+  let kids = parent.childNodes;
+  for(var i = kids.length - 1; i>=0; i--){
+  		parent.removeChild(kids[i]); 
+	}
+
+  //添加新列表
+  for(let i = 0; i<cats.length; i++){
+  	let nameNode = document.createElement('span');
+  	nameNode.setAttribute('class','cat-name');
+  	nameNode.innerHTML = cats[i].name;
+  	let weightNode = document.createElement('span');
+  	weightNode.setAttribute('class','cat-weight');
+  	weightNode.innerHTML = cats[i].weight;
+
+  	let wrap = document.createElement('div');
+  	wrap.setAttribute('class','cat');
+
+  	wrap.appendChild(nameNode);
+  	wrap.appendChild(weightNode);
+
+  	parent.appendChild(wrap);
+  }
+}
+
+
+//6.完成一个生成计数器的函数 plusFor，调用它会返回一个计数器。计数器本身也是一个函数，每次调用会返回一个字符串。
+
+// 达到以下的效果：
+
+// const counter1 = plusFor('小明')
+// counter1() // => 为小明+1s
+// counter1() // => 为小明+2s
+// counter1() // => 为小明+3s
+// ...
+
+// const counter2 = plusFor('李梅')
+// counter2() // => 为李梅+1s
+// counter2() // => 为李梅+2s
+// counter2() // => 为李梅+3s
+// ...
+
+// 注意你只需要完成 plusFor 函数，不要使用额外的全局变量。
+
+const plusFor = (str) => {
+	let i = 0;
+	return function(){
+	  i++;
+		return '为' + str + '+' + i + 's';
+	}
+}
+
+
+//7.李雷向韩梅梅求婚，韩梅梅说过一段时间（20~50ms）再回复他。
+
+// 完成 proposeToMissHan 函数，会传入一个布尔值参数 isOK，用来预先设定是否答应李雷的求婚。这个函数会返回一个 Promise，一段时间（20～50ms）以后，根据 isOK 参数，韩梅梅可能会说字符串 ok 答应李雷，也可能说字符串 no 来拒绝（reject）李雷。
+
+// 你只需要完成 proposeToMissHan 函数的编写。
+
+const proposeToMissHan = (isOK) => {
+  let p = new Promise((resolve,reject) => {
+    setTimeout(()=>{
+      if(isOK){
+        resolve("ok");
+      } else {
+        reject("no");
+      }
+    },22);
+  });
+  return p;
+}
+
+
+</script>
+
+</body>
+</html>
