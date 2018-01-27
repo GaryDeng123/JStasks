@@ -225,6 +225,516 @@ const proposeToMissHan = (isOK) => {
   return p;
 }
 
+//8.数据的分页在我们的业务当中非常常见，例如 ScriptOJ 的问题列表就有分页。
+
+// 完成分页函数 getPages，接收两个参数：
+
+// getPages(total, itemsPerPage)
+// total： 表示总共有多少条数据
+// itemsPerPage：表示每页有多少条数据
+// getPages(total, itemsPerPage) 会返回一个数字告诉我们需要有多少页数据。例如，总共 101 条数据，每页有 10 条，就需要 11 页，那么就返回 11。
+
+// itemsPerPage 为 0 的时候返回 0。
+
+// 你只需要完成 getPages 函数。
+// 
+const getPages = (total, itemsPerPage) => !itemsPerPage?0:Math.ceil(total/itemsPerPage);
+
+//9.在函数式编程当中有一个很重要的概念就是函数组合，实际上就是把处理数据的函数像管道一样连接起来，然后让数据穿过管道得到最终的结果。例如：
+
+// const add1 = (x) => x + 1
+// const mul3 = (x) => x * 3
+// const div2 = (x) => x / 2
+
+// div2(mul3(add1(add1(0)))) // => 3
+// 而这样的写法可读性明显太差了。我们可以构建一个 compose 函数，它接受任意多个函数作为参数（这些函数都只接受一个参数），然后 compose 返回的也是一个函数，达到以下的效果：
+
+// const operate = compose(div2, mul3, add1, add1)
+// operate(0) // => 相当于 div2(mul3(add1(add1(0))))
+// operate(2) // => 相当于 div2(mul3(add1(add1(2))))
+// 简而言之：compose 可以把类似于 f(g(h(x))) 这种写法简化成 compose(f, g, h)(x)。请你完成 compose 函数的编写。
+
+// 额外挑战：你能通过 1~2 行代码实现 compose 吗。
+// 
+const f1 = (x) => x + 1
+const f2 = (x) => x * 3
+const f3 = (x) => console.log(x);
+// const compose = (...args) => args[0] = () => args[1] =() => args[2];
+// 
+// 
+// 一行代码实现法
+// const compose = (...fns) => {
+//   return x => fns.reduceRight((v, f) => f(v), x);
+// }
+
+const compose = (...args) => {
+	return x => {
+		let re = args.pop()(x);
+		return args.length?compose(...args)(re):re;
+	}
+}
+// var a = compose(f3,f1,f2);
+// 
+// 
+// 
+// 10.小科去了一家新的公司做前端主管，发现里面的前端代码有一部分是 C/C++ 程序员写的，他们喜欢用下划线命名，例如： is_good。小科决定写个脚本来全部替换掉这些变量名。
+
+// 完成 toCamelCaseVar 函数，它可以接受一个字符串作为参数，可以把类似于 is_good 这样的变量名替换成 isGood。
+
+// 变量名首尾的下划线不需要做处理，中间的下划线全部删除并且处理成驼峰。
+// 
+const toCamelCaseVar = (variable) => variable.replace(/[^_]_+[a-zA-Z0-9]/g,
+	(val) => val.substring(0,1) + val.substring(val.length-1,val.length).toUpperCase());
+
+
+//11.函数式编程当中有一个非常重要的概念就是 函数柯里化。一个接受 任意多个参数 的函数，如果执行的时候传入的参数不足，那么它会返回新的函数，新的函数会接受剩余的参数，直到所有参数都传入才执行操作。这种技术就叫柯里化。请你完成 curry 函数，它可以把任意的函数进行柯里化，效果如下：
+/*
+const f = (a, b, c d) => { ... }
+const curried = curry(f)
+
+curried(a, b, c, d)
+curried(a, b, c)(d)
+curried(a)(b, c, d)
+curried(a, b)(c, d)
+curried(a)(b, c)(d)
+curried(a)(b)(c, d)
+curried(a, b)(c)(d)
+// ...
+// 这些函数执行结果都一样
+
+// 经典加法例子
+const add = curry((a, b) => a + b)
+const add1 = add(1)
+
+add1(1) // => 2
+add1(2) // => 3
+add1(3) // => 4
+注意，传给 curry 的函数可能会有任意多个参数。
+*/
+
+var curry = function curry(fn) {
+  var arr = arguments[1]
+    ? arguments[1]
+    : []
+
+  return function f1() {
+    var args = [].slice.call(arguments)
+
+    return function f2(arg) {
+      return arg.length === fn.length
+        ? fn.apply(null, arg)
+        : curry(fn, arg)
+    }(arr.concat(args))
+  }
+}
+
+//es6方法
+const curry = ( f, arr = []) => (...args) => ( a => a.length === f.length ? f(...a) : curry(f, a))([...arr, ...args]);
+
+
+
+//12
+/*
+完成 getPageTags 函数，判断你的代码所执行的页面用到了哪些标签。
+
+例如，如果页面中：
+
+<html>
+  <head></head>
+  <body></body>
+
+那么 getPageTags() 则返回数组 ['html', 'head' 'body', 'script']（顺序不重要）。
+
+ */
+
+//xiao tips
+//为什么这个操做可以把HTMLCollection转为Array?
+//
+//var eles=document.getElementsByTagName('div');
+// var elesArray=Array.prototype.slice.call(eles,0);
+// 
+// 回答这个问题你首先需要知道，NodeList是一个array like的object，不是真正的array.其次你需要知道Array.prototype.slice方法可以把一个array like的object转成新的array，方法是把slice方法bind给待转对象。bind的过程可以通过call方法进行。call第一个参数就是显式指定的this. 在此处就是这个NodeList.最后这个方法可以简化成
+// 
+// [].slice.call(elems)
+
+const getPageTags = () => {
+	let arr = [].slice.call(document.getElementsByTagName('*')).reduce((acc,val) => acc.concat(val.tagName.toLowerCase()),[]);
+	return unique = [...new Set(arr)];
+}
+
+
+
+
+//13.从某数据库接口得到如下值：
+/*
+{
+  rows: [
+    ["Lisa", 16, "Female", "2000-12-01"],
+    ["Bob", 22, "Male", "1996-01-21"]
+  ],
+  metaData: [
+    { name: "name", note: '' },
+    { name: "age", note: '' },
+    { name: "gender", note: '' },
+    { name: "birthday", note: '' }
+  ]
+}
+rows 是数据，metaData 是对数据的说明。现写一个函数 parseData，将上面的对象转化为期望的数组：
+
+[
+  { name: "Lisa", age: 16, gender: "Female", birthday: "2000-12-01" },
+  { name: "Bob", age: 22, gender: "Male", birthday: "1996-01-21" },
+]
+*/
+var data = 
+{
+  rows: [
+    ["Lisa", 16, "Female", "2000-12-01"],
+    ["Bob", 22, "Male", "1996-01-21"]
+  ],
+  metaData: [
+    { name: "name", note: '' },
+    { name: "age", note: '' },
+    { name: "gender", note: '' },
+    { name: "birthday", note: '' }
+  ]
+}
+
+
+const parseData = (data) => {
+	let rows = data.rows;
+	let metaData = data.metaData;
+	let res = [];
+	for(let i = 0; i < rows.length; i++){
+		let arr = {};
+		for(let j = 0; j < metaData.length; j++){
+			let key = metaData[j].name.replace(/"/g,'');
+			let value = rows[i][j];
+			arr[key] = value;
+		}
+		res.push(arr);
+	}
+	return res;
+}
+
+
+
+//14.deepflatten array
+//
+const flatten = (arr) => arr.reduce((acc,val) => acc.concat(Array.isArray(val)?flatten(val):val),[]);
+
+
+//15.完成 cookieJar 单例，它有三个方法：
+
+// set(name, value, days)：设置 cookie 的值，days 为多少天以后过期。
+// get(name)：获取 cookie 的值。
+// remove(name)：删除 cookie 的值。
+// （本题来源：阿里巴巴前端笔试题）
+
+const cookieJar = {
+  set (name, value, days) {
+  	let seconds = days * 24 * 60 * 60;
+  	const d = new Date();
+    d.setDate(d.getDate() + days)
+    document.cookie = name + "=" + value + "; max-age=" + d;
+  },
+  get (name) {
+    const obj = {};
+    document.cookie.split(";").forEach( val => {
+    	val = val.trim();
+    	let key = val.slice(0,val.indexOf("="));
+    	let value = val.slice(val.indexOf("=") + 1);
+    	obj[key] = value;
+    });
+    return obj[name];
+  },
+  remove (name) {
+    this.set(name,'',-1);
+  }
+}
+
+//cankao
+// const cookieJar = {
+//   set (name, value, days) {
+//     const d = new Date();
+//     d.setDate(d.getDate() + days)
+//     document.cookie = `${name}=${value}; expires=${d}`
+//   },
+//   get (name) {
+//     const obj = {};
+//     document.cookie.split(';').forEach(s => {
+//       s = s.trim();
+//       const key = s.slice(0, s.indexOf('='));
+//       const value = s.slice(s.indexOf('=') + 1);
+//       obj[key] = value;
+//     })
+//     return obj[name];
+//   },
+//   remove (name) {
+//     this.set(name, '', -1)
+//   }
+// }
+// 
+// 
+// 
+// 16
+/*
+黄小明是老司机了，他每天任务就是送一群人去上班。但是每天送的人数不一样，这些人上车的时间也不一样。小明总是要等到人齐才能开车。
+
+完成函数 driveCustomers，它接受不定数量的参数，这是参数都是函数，每个函数代表一个人。这些函数都接受一个回调函数作为参数，当回调函数被调用的时候说明这个人已经上车了，回调函数会被传入人名。例如：
+
+const MissLi = (callback) => {
+  setTimeout(() => {
+    callback('MissLi')
+  }, 10) // 上车时间不一定
+}
+
+const MrWang = (callback) => {
+  setTimeout(() => {
+    callback('MrWang')
+  }, 3) // 上车时间不一定
+}
+
+// ..
+
+driveCustomers(MissLi, MarWang, ...)
+请你完成 driveCustomers 函数，它的作用是：当人都到齐以后，按上车的时间顺序把人名放到一个数组里面然后传给 drive 函数，正式开车。例如：drive(['MrWang', 'MissLi'])。
+
+你只需要完成 driveCustomers 函数，drive 函数已经可以直接使用。
+ */
+/* drive 函数已经可以直接使用 */
+
+const driveCustomers = (...args) => {
+	let all = [];
+	let passers = [];
+	all = args.reduce((acc,val) => acc.concat(new Promise( (resolve) => {
+		val((p)=>{
+			passers.push(p);
+			resolve();
+		});
+	})),[]);
+	Promise.all(all).then(drive(passers));
+}
+
+//other answer  
+// const driveCustomers = (...args) => {
+// 	let customers = [];
+// 	const promises = args.map(fn=>new Promise((resolve)=>{
+// 		fn((p)=>{
+// 			customers.push(p);
+// 			resolve();
+// 			})
+// 		}));
+// 	Promise.all(promises).then(() => {
+// 		drive(customers)
+// 	})
+// }
+// 
+// 
+// reference answer
+// 
+const driveCustomers = (...fns) => {
+  const arr = []
+  fns.forEach((fn) => {
+    fn((name) => {
+      arr.push(name)
+      if (arr.length === fns.length) {
+        drive(arr)
+      }
+    })
+  })
+}
+
+/*
+17
+在开发当中，我们经常要处理 url。而 url 上的 query string 是我们重点要处理的对象，完成一个 parseQueryString 函数。它接受一个 url 字符串作为参数，返回一个对象，这个对象包含 query string 上的键值对。例如：
+
+parseQueryString('https://scriptoj.com/problems?offset=100&limit=10')
+返回:
+
+{ offset: '100', limit: '10'}
+特殊情况说明：如果出现 ?name=&age=12 则返回 { name: '', age: '12' }，如果 ?name&age=12 则返回 { name: null, age: '12' }。
+
+请考虑清楚 query string 可能出现的各种情况，包括可能的出现 hash 的情况（?name=jerry#nice）。
+
+如果需要帮助，可以对照参 URI.js 的执行结果。
+
+（本题来源：阿里巴巴前端笔试题）
+ */
+
+var url = "https://scriptoj.comproblems/?offset=10&limit=100&tag=all?name=lucy?name=jerry#nice";
+var url = " https://scriptoj.com/";
+const parseQueryString = (url) => {
+	let start = url.indexOf('?');
+	let end = url.indexOf('#')!== -1?url.indexOf('#'):url.length;
+	if (start === -1 || end < start) {
+		let obj = {};
+		return obj;
+	} else {
+		let str = url.slice(start + 1,end);
+		let obj = {};
+		str.split('&').forEach((val) => {
+			let symbol_eq = val.indexOf('=');
+			if (symbol_eq !== -1) {
+				let key = val.slice(0,symbol_eq);
+				let value = val.slice(symbol_eq + 1,val.length);
+				obj[key] = value;
+			} else {
+				let key = val;
+				let value  = null;
+				obj[key] = null
+			}
+		});
+		return obj;
+	}
+}
+// 
+// 注意：" https://scriptoj.com/"; 返回{}；
+// 注意hash
+// 注意 "https://scriptoj.comproblems/?offset=10&limit=100&tag=all?name=lucy?name=jerry#nice";
+// fanhui {offset: "10", limit: "100", tag: "all", name: "lucy"}  wrong
+// fanhui {name: "lucy"} wrong
+// fanhui {offset: "10", limit: "100", tag: "all"} wrong
+// fanhui {}? wrong
+// 
+// answer: {offset: "10", limit: "100", tag: "all?name=lucy"}  WTF???????气死我了
+// 
+// 
+// const parseQueryString = (url) => {
+// 	let obj = {};
+// 	if ((url.indexOf('#')!== -1 && url.indexOf('#') < url.indexOf('?')||url.indexOf('?')=== -1)) {
+// 		return obj;
+// 	}
+// 	let arrs = url.split('?');
+// 	let arr2 = new Array(2);
+// 	arr2[0] = arrs[0];
+// 	arr2[1] = "";
+// 	for(let i = 1; i < arrs.length; i++){
+// 		arr2[1] += arrs[i];
+// 	}
+
+// 	arr2.forEach((arr,index) => {
+// 		if (index === 1) {
+// 			arr = arr.split('#')[0];
+// 			arr.split('&').forEach((val) => {
+// 				let key = val.split('=')[0];
+// 				let value = val.split('=')[1] !== null ? val.split('=')[1] : null;
+// 				obj[key] = value;
+// 			});
+// 		}
+// 	});
+// 	return obj;
+// }
+
+/*
+18
+观察者模式在前端开发中非常常用，我们经常用的事件就是观察者模式的一种体现。它对我们解耦模块、开发基于消息的业务起着非常重要的作用。Node.js 原生自带 EventEmitter 模块，可见它的重要性。
+
+完成 EventEmitter 模块，它是一个类，它的实例具有以下几个方法：on、emit、off：
+
+on(eventName, func)：监听 eventName 事件，事件触发的时候调用 func 函数。
+emit(eventName, arg1, arg2, arg3...)：触发 eventName 事件，并且把参数 arg1, arg2, arg3... 传给事件处理函数。
+off(eventName, func)：停止监听某个事件。
+使用例子：
+
+const emitter = new EventEmitter()
+const sayHi = (name) => console.log(`Hello ${name}`)
+const sayHi2 = (name) => console.log(`Good night, ${name}`)
+
+emitter.on('hi', sayHi)
+emitter.on('hi', sayHi2)
+emitter.emit('hi', 'ScriptOJ')
+// => Hello ScriptOJ
+// => Good night, ScriptOJ
+
+emitter.off('hi', sayHi)
+emitter.emit('hi', 'ScriptOJ')
+// => Good night, ScriptOJ
+
+const emitter2 = new EventEmitter()
+emitter2.on('hi', (name, age) => {
+  console.log(`I am ${name}, and I am ${age} years old`)
+})
+emitter2.emit('hi', 'Jerry', 12)
+// => I am Jerry, and I am 12 years old
+（本题来源：阿里巴巴前端笔试题）
+
+ */
+
+//reference answer
+//
+class EventEmitter {
+  constructor() {
+    this.handlers = {}
+  }
+  
+  on(eventName, func) {
+    let callbacks = eventName in this.handlers ? this.handlers[eventName] : []
+    callbacks.push(func)
+    this.handlers[eventName] = callbacks
+  }
+  
+  emit(eventName, ...args) {
+    if (!eventName in this.handlers) return
+    const callbacks = this.handlers[eventName]
+    callbacks.map(cb => {
+      cb(...args)
+    })
+  }
+  
+  off(eventName, func) {
+    if (!eventName in this.handlers) return
+    let callbacks = this.handlers[eventName]
+    let index = callbacks.indexOf(func)
+    callbacks.splice(index, 1)
+  }
+}
+
+// 19.垂直水平居中
+/*position大法*/
+/*#box {*/
+/*  width: 100px;*/
+/*  height: 100px;*/
+/*  position:absolute;*/
+/*  left:50%;*/
+/*  top:50%;*/
+/*  transform:translate(-50%,-50%);*/
+/*}*/
+/*#wrapper{*/
+/*  position:relative;*/
+/*}*/
+
+/*flex大法*/
+// #wrapper{
+//   display:flex;
+//   align-items:center;
+//   justify-content:center;
+// }
+// #box{
+//   width:100px;
+//   height:100px;
+// }
+// 
+// 
+// 20在开发前端框架、模版引擎的时候，经常会需要我们在特定的上下文中，动态分析、执行特定的表达式。例如：在 { x: 1, y: 2, z: 3 } 的上下文中执行表达式 x + y 那么就会得到 3，执行 z - x 就会得到 2。
+
+// 请你完成 execute 函数，接受一个字符串和对象作为参数，它可以在特定的上下文中执行任意的表达式，例如：
+
+// execute(`'My name is ' + name`, { name: 'Jerry' }) // => My name is Jerry
+// execute('monkeys.length + 1', { monkeys: [1, 2, 3] }) // => 4
+// execute('user.name + user.age', { user: { name: 'Jerry', age: 12 } }) // => Jerry12
+// execute('run()', { run: () => 'Good Night' }) // => Good Night
+// ...
+// （你能否想出不使用 with 的方案？）
+// 
+// 
+
+// Function
+const execute = (exp, data) => new Function(...Object.keys(data),`return ${exp}`)(...Object.values(data))
+
+// with
+const execute = (exp, data) => eval(`with(data){${exp}}`)
+const execute = (str,obj) => eval("with(obj){" + str + "}");
 
 </script>
 
