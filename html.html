@@ -1,9 +1,74 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title></title>
-</head>
-<body>
-		<div id="cats-list"></div>
+  <head>
+	<title>123</title>
+  </head>
+  <body>
+	  <ul id='adjustable-list'>
+	  <li>
+	    <span>1</span>
+	    <button class='up'>UP</button>
+	    <button class='down'>DOWN</button>
+	  </li>
+	  <li>
+	    <span>2</span>
+	    <button class='up'>UP</button>
+	    <button class='down'>DOWN</button>
+	  </li>
+	  <li>
+	    <span>3</span>
+	    <button class='up'>UP</button>
+	    <button class='down'>DOWN</button>
+	  </li>
+	</ul>
+
+	  <script>
+const initAdjustableList = () =>{
+	const $ = function(id){return document.getElementById(id)}
+	const insertAfter = (newEle,tarEle) => {
+		let parent = tarEle.parentNode;
+		console.log('this is insertAfter');
+		if (tarEle === parent.lastChild) {
+			parent.appendChild(newEle);
+		} else {
+			parent.insertBefore(newEle,tarEle.nextSibling);
+		}
+	}
+
+	$("adjustable-list").addEventListener('click',(event)=>{
+		let _this;//该li
+		let ul = $("adjustable-list");
+		if (event.target.classList.contains('up')) {
+			console.log(event.target.classList);
+			_this = event.target.parentNode;
+			if (_this === ul.children[0]) {
+				ul.appendChild(_this);
+			} else {
+				let target = _this.previousElementSibling;
+				//一定要是previousElementSibing！！！如果是previousSibling则是一个TextNode
+				ul.insertBefore(_this,target);
+				//insertBefore 方法会把元素先从文档树上删除，再挪动！！！
+			}
+		}
+		if (event.target.className.toLowerCase() === 'down') {
+			console.log('down');
+			_this = event.target.parentNode;
+			console.log(_this);
+			if (_this === ul.children[ul.children.length - 1]) {
+				console.log("this is lastCHild");
+				let first = ul.children[0];
+				//pay attention 上面不要写ul.firstChild. 因为firstCHild是一个textNode；
+				ul.insertBefore(_this,first);
+			} else {
+				console.log('this aint the lastchld');
+				let target = _this.nextElementSibling;
+				console.log(target);
+				insertAfter(_this,target);
+			}
+		}
+	});
+}
+  </script>
 </body>
+
 </html>

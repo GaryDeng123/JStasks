@@ -736,6 +736,445 @@ const execute = (exp, data) => new Function(...Object.keys(data),`return ${exp}`
 const execute = (exp, data) => eval(`with(data){${exp}}`)
 const execute = (str,obj) => eval("with(obj){" + str + "}");
 
+/*
+21 DOMcaozuo
+循环调节列表
+
+页面上有这么一个列表：
+
+<ul id='adjustable-list'>
+  <li>
+    <span>1</span>
+    <button class='up'>UP</button>
+    <button class='down'>DOWN</button>
+  </li>
+  <li>
+    <span>2</span>
+    <button class='up'>UP</button>
+    <button class='down'>DOWN</button>
+  </li>
+  <li>
+    <span>3</span>
+    <button class='up'>UP</button>
+    <button class='down'>DOWN</button>
+  </li>
+  ...
+</ul>
+点击 UP 按钮会使得该 li 元素在列表中上升一个位置，点击 DOWN 按钮会使得该 li 元素下降一个位置。点击最后的元素的 DOWN 按钮会使得元素回到第一个位置，点击第一个元素的 UP 按钮会使其回到最后的位置。
+
+页面上已经存在该列表，你只需要完成 initAdjustableList() 函数，给元素添加事件。
+
+
+ */
+
+const initAdjustableList = () =>{
+	const $ = function(id){return document.getElementById(id)}
+	const insertAfter = (newEle,tarEle) => {
+		let parent = tarEle.parentNode;
+		if (tarEle === parent.lastChild) {
+			parent.appendChild(newEle);
+		} else {
+			parent.insertBefore(newEle,tarEle.nextSibling);
+		}
+	}
+
+	$("adjustable-list").addEventListener('click',(ev)=>{
+		let event = ev || window.event; //兼容ie！
+		let target = event.target || event.srcElement;
+
+		let _this;//该li
+		let ul = $("adjustable-list");
+		if (target.className.toLowerCase() === 'up') {    //其实有问题，如果className不止是up 就无法匹配
+			_this = target.parentNode;											//最好用target.classList.contains('up')
+			if (_this === ul.children[0]) {
+				ul.appendChild(_this);
+			} else {
+				let targetEle = _this.previousElementSibling;
+				ul.insertBefore(_this,targetEle);
+				//insertBefore 方法会把元素先从文档树上删除，再挪动！！！
+			}
+		}
+		if (target.className.toLowerCase() === 'down') {
+			_this = target.parentNode;
+			if (_this === ul.children[ul.children.length - 1]) {
+				let first = ul.children[0];
+				//pay attention 上面不要写ul.firstChild. 因为firstCHild是一个textNode；
+				ul.insertBefore(_this,first);
+			} else {
+				let targetEle = _this.nextElementSibling;
+				insertAfter(_this,targetEle);
+			}
+		}
+	});
+}
+
+//reference elegant
+const initAdjustableList = ()=>{
+let upOrDown = (e)=>{   let ev = e || window.event;
+	let target = ev.target;
+	let upBtn = ()=>{	let oli = target.parentElement;
+		oul.insertBefore(oli,oli.previousElementSibling);
+	return false;}
+	let dwBtn = ()=>{	let oli = target.parentElement;
+		let next = oli.nextElementSibling;
+		oli === oul.lastElementChild ? 
+		oul.insertBefore(oli,oul.firstElementChild) : oul.insertBefore(next,oli);
+	return false;}
+	target.classList.contains('up') ? upBtn() : '';   
+	target.classList.contains('down') ? dwBtn() : '';
+return false;}
+let oul = document.getElementById('adjustable-list');
+oul.addEventListener('click',upOrDown);
+return false;}
+
+
+
+
+
+/*
+22
+在前端开发当中，会遇到某个函数被高频率调用的情况。比如说用户疯狂地按住某个按钮，这些事件都会导致回调函数被高频地调用，但是高频调用这些函数可能会导致页面运行效率下降。
+
+于是就有了一种 debounce 的解决方案：如果你疯狂、高频地调用某个函数，而调用之间的时间间隔低于某个时间段，这个函数最后只会被执行一次；如果高于某个时间段，则会执行多次。
+
+请你完成 debounce，它接受两个参数，一个是被封装函数，一个是时间间隔（ms），然后返回一个函数。可以做到函数防抖的效果：
+
+window.addEventListener('resize', debounce(() => {
+  console.log('Hello')
+}, 100))
+ */
+
+//思路：debounce里定义一个局部变量timer，再写一个闭包去控制这个timer。
+//timer写在闭包外是只执行一次的，而闭包函数在监听过程中是执行多次的。
+const debounce = (fn, duration) => {
+  let timer = null;
+  return () => {
+    clearTimeout(timer)
+    timer = setTimeout(fn, duration)
+  }
+}
+
+
+
+//23 给一个字符串，返回该字符串所有可能组合。比如“abc' =》 【abc,acb,bac,bca,cab,cba】
+
+const anagrams = str => {
+	if (str.length <= 2) {return str.length === 2?[str,str[1]+str[0]]:[str]};
+	return str.split('').reduce((acc,val,index) => 
+		acc.concat(anagrams(str.slice(0,index) + str.slice(index+1)).map(value => val + value)),[]);
+}
+
+
+//24.
+/*
+同字母异序指的是两个字符串字母种类和字母的数量相同，但是顺序可能不同。
+
+完成 isAnagram，接受两个字符串作为参数，返回true 或者 false 表示这两个字符串是否同字母异序。例如：
+
+isAnagram("anagram", "nagaram") // => return true.
+isAnagram("rat", "car") // => return false.
+（本题来源：github, LeetCode）
+ */
+
+ 巧！
+
+const isAnagram = (str1, str2) => str1.split('').sort().join('') === str2.split('').sort().join('')
+
+
+//25
+/*
+实现一个函数 where，它返回它被调用的时候所在的函数的名字，例如：
+
+function main () {
+  where() // => 'main'
+}
+
+function a () {
+  function b () {
+    where() // => 'b'
+  }
+  b()
+}
+
+main()
+a()
+
+ */
+
+非严格模式下：
+
+function where() {
+  return where.caller.name
+}
+
+
+答案：
+
+function where () {
+  try {
+    throw new Error()
+  } catch (e) {
+    return e.stack.split('\n')[2].match(/at\s(.+?)\s/)[1]
+  }
+}
+
+
+必须用严格模式怎么写：
+
+const where = () => {
+    let reg = /\s+at\s(\S+)\s\(/g
+    let str = new Error().stack.toString()
+    let res = reg.exec(str) && reg.exec(str)
+    return res && res[1]
+}
+
+/*
+26.国家有重要的任务要托付给你：完成间谍函数 spy，它可以潜伏到任何一个函数当中，监听它们的所有活动。spy 接受一个函数作为参数，返回一个被间谍潜伏以后的函数。
+
+let america = (a, b) => a + b
+
+america = spy(america)
+america(1, 2) // => 3
+spy 返回的函数和原来的函数的功能一样，但是它悄悄记录了每一次执行的参数和执行结果，都存放到一个 calls 数组里面：
+
+america(1, 2)
+america(3, 4)
+
+america.calls[0].args // => [1, 2]
+america.calls[0].result // => 3
+
+america.calls[1].args // => [3, 4]
+america.calls[1].result // => 7
+注意，spy 可以支持潜伏到对象方法当中：
+
+let user = {
+  name: 'Jerry',
+  getName () {
+    return this.name
+  }
+}
+
+user.getName = spy(user.getName)
+user.getName() // => 'Jerry'
+user.getName.calls[0].result // => 'Jerry'
+另外，不要修改被 spy 的函数（你应该返回一个全新的函数），否则会被敌人发现。
+ */
+
+const spy = (fn) => {
+	let calls = [];
+	let a = function(...args){
+		let res = {};
+		res.args = args;
+		res.result = fn.apply(this,args);
+		calls.push(res);
+		return res.result;
+	}
+	a.calls = calls
+	return a
+}
+const f1 = (a,b,c) => a+b+c;
+
+
+// function a(foo){
+// 	return function(args){
+// 		return foo;
+// 	}
+// }
+
+
+//reference 
+const spy = function(fn) {
+  var calls = []
+  var f = function() { 
+    var obj = {
+      args: [...arguments],
+      result: fn.apply(this, arguments)
+    }
+    calls.push(obj)
+    return obj.result
+  }
+  f.calls = calls
+  return f
+}
+
+
+
+/*
+27.时间停止
+pause 函数可以让一个函数暂停运行一段时间（ms）以后继续运行。例如：
+
+async function run () {
+  console.log('Hello')
+  await pause(1000) // 续一秒
+  console.log('World') // 一秒以后继续运行
+}
+ */
+
+const pause = async (time) => new Promise((resolve) => setTimeout(resolve,time))
+
+
+/*
+28 js数据类型的判断
+最新的 Javascript 标准规定了六种基本数据类型(number, null, undefined, string, boolean, symbol) 和基于 Object 衍生的其它原生数据类型，写出 type 函数，它传入一个参数，返回它的数据类型（用小写字母），比如: type(new Date)，返回 date。
+ */
+
+
+
+const type = (obj) => 
+        typeof(obj) === "object"
+        ?(obj === null?'null':obj.constructor.name.toLowerCase())
+        :typeof(obj)
+
+
+
+
+/*
+29 Proxy!!!!!!!
+Tomy 非常敏感，不喜欢别人碰他的东西。一旦有人碰他就会大喊 Don't Touch Me.。
+
+完成 tomy 这个对象，禁止对 tomy 的内容进行修改（增加、修改、删除）。一旦有人对 tomy 进行任何的修改，都用 console.log 打印 Don't Touch Me.。
+
+下面是 Proxy 支持的拦截操作一览，一共 13 种。
+
+get(target, propKey, receiver)：拦截对象属性的读取，比如proxy.foo和proxy['foo']。
+set(target, propKey, value, receiver)：拦截对象属性的设置，比如proxy.foo = v或proxy['foo'] = v，返回一个布尔值。
+has(target, propKey)：拦截propKey in proxy的操作，返回一个布尔值。
+deleteProperty(target, propKey)：拦截delete proxy[propKey]的操作，返回一个布尔值。
+ownKeys(target)：拦截Object.getOwnPropertyNames(proxy)、Object.getOwnPropertySymbols(proxy)、Object.keys(proxy)，返回一个数组。该方法返回目标对象所有自身的属性的属性名，而Object.keys()的返回结果仅包括目标对象自身的可遍历属性。
+getOwnPropertyDescriptor(target, propKey)：拦截Object.getOwnPropertyDescriptor(proxy, propKey)，返回属性的描述对象。
+defineProperty(target, propKey, propDesc)：拦截Object.defineProperty(proxy, propKey, propDesc）、Object.defineProperties(proxy, propDescs)，返回一个布尔值。
+preventExtensions(target)：拦截Object.preventExtensions(proxy)，返回一个布尔值。
+getPrototypeOf(target)：拦截Object.getPrototypeOf(proxy)，返回一个对象。
+isExtensible(target)：拦截Object.isExtensible(proxy)，返回一个布尔值。
+setPrototypeOf(target, proto)：拦截Object.setPrototypeOf(proxy, proto)，返回一个布尔值。如果目标对象是函数，那么还有两种额外操作可以拦截。
+apply(target, object, args)：拦截 Proxy 实例作为函数调用的操作，比如proxy(...args)、proxy.call(object, ...args)、proxy.apply(...)。
+construct(target, args)：拦截 Proxy 实例作为构造函数调用的操作，比如new proxy(...args)。
+
+ */
+
+const tomy = new Proxy({},{
+  set:function(target,key,value) {
+    console.log("Don't Touch Me.");
+  },
+  deleteProperty:function(target,key) {
+    console.log("Don't Touch Me.");
+    return false;//如果这个方法抛出错误或者返回false，当前属性就无法被delete命令删除。
+  },
+  defineProperty:function(target,key) {
+    console.log("Don't Touch Me.");
+    return false;
+  }
+});
+
+
+
+/*
+30 render
+模版引擎是在前端是非常常用的一种工具。请你完成一个简单的模版引擎的 render 函数，它可以接受模版字符串和一个数据对象作为参数。函数执行返回渲染以后的模版字符串，例如：
+
+const templateStr = `
+<ul class="users">
+  <% users.forEach((user) => { %>
+    <li class="user-item">
+      <%= 'My name is ' + user.name %>
+    </li>
+  <% }) %>
+</ul>
+`
+
+const data = {
+  users: [
+    { name: 'Jerry', age: 12 },
+    { name: 'Lucy', age: 13 }, 
+    { name: 'Tomy', age: 14 }
+  ]
+}
+
+render(templateStr, data)
+/*返回结果：
+
+<ul class="users">
+  <li class="user-item">
+    My name is Jerry
+  </li>
+  <li class="user-item">
+    My name is Lucy
+  </li>
+  <li class="user-item">
+    My name is Tomy
+  </li>
+</ul>
+
+
+<% 和 %> 之间可以放置任意的 JavaScript 代码，而 <%= 和 %> 之间执行任意的 JavaScript 表达式并且输出在模版上；传入的 data 可以作为模版引擎执行的上下文进行数据的引用，请你完成 render 函数。
+
+
+
+ */
+
+
+
+const render = (str,obj) => new Function(...Object.keys(obj),'return ' + str)(...Object.values(obj));
+
+const render = (template, data) => /* TODO */
+{
+  let exp0 = /<%=(.+)%>/g
+  let exp1 = /<%(.+)%>/g
+  template = template.replace(exp0,'`);\n echo($1) \n echo(`').replace(exp1,'`);\n $1 \n echo(`')
+  template = 'echo(`' + template +'`)'
+  //${template}的结果为 调用若干echo函数
+  let comp = `
+  let html = ''
+  function echo(t){
+    html+=t
+  }
+  ${template}
+  return html
+  `
+  return Function(...Object.keys(data),comp)(...Object.values(data))
+}
+
+正则实现
+const render = (template, data) => {
+	const result = 
+    	`var p=[];with(data){p.push('` + template
+    	.replace(/[\r\n\t]/g,'')
+        .replace(/<%=(.*?)%>/g,`');p.push($1);p.push('`)
+        .replace(/<%/g,`');`)
+        .replace(/%>/g,`;p.push('`)
+        + `');} p.join('');`; 
+
+    return eval(result);
+}
+
+var str   = `<ul class="users">
+  <% users.forEach((user) => { %>
+    <li class="user-item">
+      <%= 'My name is ' + user.name %>
+    </li>
+  <% }) %>
+</ul>`
+
+
+function a1(data,path){
+	let p = new Proxy(target,{
+		get:function(target,key){
+			if (Object.keys(target).includes(key)) {
+				return target[key];  //写data.key就不对???
+			} else {
+			return 'undefined';
+			}
+		}
+	});
+	return p.path
+}
+
+var data = { a: { b: { c: 'ScriptOJ' } } }
+
+
+
+
+
 </script>
 
 </body>
