@@ -1171,7 +1171,18 @@ function a1(data,path){
 
 var data = { a: { b: { c: 'ScriptOJ' } } }
 
+//1.30 追加
+//定义一个log函数 使之可以代理console.log的功能
+const log = (...args) => console.log(args);//返回的好像是一个数组 和console。log出来的不太一样
 
+function log2(){
+  console.log.apply(console, arguments);
+};//这个方法可以
+
+plus 注意 ...args之后 args是数组
+而是用arguments的话，它是一个伪数组。需要转化成数组之后才能是用数组的方法。
+let args = [].slice.apply(arguments);
+args.unshift('app'); //往队首添加！
 
 
 
